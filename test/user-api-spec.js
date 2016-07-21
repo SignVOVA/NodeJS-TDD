@@ -4,6 +4,8 @@ require('co-mocha');
 var should = require('should');
 var data = require('../user-data');
 var fs = require('co-fs');
+var api = require('../user-web.js');
+var request = require('co-supertest').agent(api.listen());
 
 // Before test is run we clearing the json file
 before(function *() {
@@ -18,6 +20,22 @@ describe('user data', function() {
     yield data.users.save({ name: 'Sam'});
 
     var newUsers = yield data.users.get();
+
+    newUsers.length.should.equal(users.length + 1);
+  });
+});
+
+describe('user web', function() {
+  it('should have +1 user count after saving', function* () {
+    //'data' renamed to 'res' for response
+    var res = yield request.get('/user').expect(200).end();
+
+    var users = res.body;
+
+    yield data.users.save({ name: 'John'});
+
+    var newres = yield request.get('/user').expect(200).end();
+    var newUsers = newres.body;
 
     newUsers.length.should.equal(users.length + 1);
   });
